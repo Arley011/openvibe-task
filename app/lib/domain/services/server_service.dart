@@ -29,7 +29,7 @@ class ServerService {
 
   static final _onMessageController = StreamController<dynamic>.broadcast();
 
-  static bool _automaticallyReconnect = false;
+  static bool _automaticallyReconnect = true;
 
   static bool get isInitialized => _instance != null;
 
@@ -81,13 +81,13 @@ class ServerService {
   }
 
   static void _handleMessage(dynamic message) {
-    log('$kServerService received message: $message');
     _onMessageController.add(message);
   }
 
   static void _handleOnDone() async {
     log('$kServerService connection closed');
-    // TODO implement reconnect
+    await _instance?.destroy();
+    // TODO implement auto reconnect
     // if (_automaticallyReconnect) {
     //   log('$kServerService Trying to reconnect...');
     //   await Future.delayed(const Duration(seconds: 2));

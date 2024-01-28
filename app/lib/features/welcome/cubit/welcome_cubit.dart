@@ -16,7 +16,8 @@ class WelcomeCubit extends Cubit<WelcomeState> {
 
     // Simulate loading
     await Future.delayed(const Duration(seconds: 2));
-    final isConnected = await ServerService().isConnected;
+    final isConnected =
+        ServerService.isInitialized ? await ServerService().isConnected : false;
     if (isConnected) {
       log('Connected to server');
       emit(const WelcomeSuccess());
