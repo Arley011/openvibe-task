@@ -29,7 +29,7 @@ class ServerService {
 
   static final _onMessageController = StreamController<dynamic>.broadcast();
 
-  static bool _automaticallyReconnect = true;
+  bool _automaticallyReconnect = false;
 
   static bool get isInitialized => _instance != null;
 
@@ -45,12 +45,8 @@ class ServerService {
   }
 
   static void init({
-    bool forceInit = false,
+    bool reconnectOnDone = false,
   }) async {
-    if (forceInit) {
-      await _instance?.destroy();
-    }
-
     if (isInitialized) {
       throw Exception('$kServerService is already initialized. '
           'Call ServerService.destroy() first if you want to re-init.');
@@ -77,29 +73,7 @@ class ServerService {
             error: error,
           ),
         ),
-    );
-  }
-
-  static void _handleMessage(dynamic message) {
-    _onMessageController.add(message);
-  }
-
-  static void _handleOnDone() async {
-    log('$kServerService connection closed');
-    await _instance?.destroy();
-    // TODO implement auto reconnect
-    // if (_automaticallyReconnect) {
-    //   log('$kServerService Trying to reconnect...');
-    //   await Future.delayed(const Duration(seconds: 2));
-    // }
-  }
-
-  static void _handleError(dynamic error) {
-    _instance?.enableAutoReconnect();
-    log(
-      '$kServerService socket stream error',
-      error: error,
-    );
+    ).._automaticallyReconnect = reconnectOnDone;
   }
 
   void send(Object message) {
@@ -113,6 +87,30 @@ class ServerService {
 
   void disableAutoReconnect() {
     _automaticallyReconnect = false;
+  }
+
+  static void _handleMessage(dynamic message) {
+    _onMessageController.add(message);
+  }
+
+  static void _handleOnDone() async {
+    log('$kServerService connection closed');
+    final wantReconnect = _instance?._automaticallyReconnect ?? false;
+
+    await _instance?.destroy();
+    if (wantReconnect) {
+      log('$kServerService Trying to reconnect...');
+      Future.delayed(const Duration(seconds: 2), () {
+        ServerService.init(reconnectOnDone: wantReconnect);
+      });
+    }
+  }
+
+  static void _handleError(dynamic error) {
+    log(
+      '$kServerService socket stream error',
+      error: error,
+    );
   }
 
   Future<void> destroy() async {

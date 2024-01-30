@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:openvibe_app/features/welcome/cubit/welcome_cubit.dart';
 
+/// Widget to display a welcome status.
+/// Shows loader or error with retry button depending on the [state].
 class WelcomeStatus extends StatelessWidget {
   const WelcomeStatus({
     super.key,

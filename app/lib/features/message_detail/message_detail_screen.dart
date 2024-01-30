@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:openvibe_app/common/extensions/date_time_extension.dart';
-import 'package:openvibe_app/domain/models/message.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:openvibe_app/common/widgets/widgets.dart';
+import 'package:openvibe_app/features/message_detail/cubit/message_detail_cubit.dart';
+import 'package:openvibe_app/features/message_detail/widgets/widgets.dart';
 
+/// Screen to display a message detail.
 class MessageDetailScreen extends StatelessWidget {
-  const MessageDetailScreen({
-    super.key,
-    required this.message,
-  });
+  const MessageDetailScreen._(this.messageId);
 
-  // TODO implement retrieving from cache
-  static PageRoute route(Message message) {
+  static PageRoute route(String id) {
     return MaterialPageRoute(
-      builder: (_) => MessageDetailScreen(message: message),
+      builder: (_) => BlocProvider(
+        create: (context) => MessageDetailCubit()..loadMessage(id),
+        child: MessageDetailScreen._(id),
+      ),
     );
   }
 
-  final Message message;
+  final String messageId;
 
   @override
   Widget build(BuildContext context) {
@@ -24,65 +26,44 @@ class MessageDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Post'),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      body: BlocBuilder<MessageDetailCubit, MessageDetailState>(
+        builder: (context, state) {
+          if (state is MessageDetailError) {
+            return Center(
+              child: ErrorPlaceholder(
+                title: 'Something went wrong',
+                message: state.error.toString(),
+                onReload: () {
+                  context.read<MessageDetailCubit>().loadMessage(messageId);
+                },
+              ),
+            );
+          } else if (state is! MessageDetailLoaded) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(message.icon, style: const TextStyle(fontSize: 32)),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          message.nickname,
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              message.createdAt.formattedTime24H,
-                              style: theme.textTheme.labelMedium,
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
-                              child: Icon(
-                                Icons.circle,
-                                size: 4,
-                                color: theme.textTheme.labelMedium?.color,
-                              ),
-                            ),
-                            Text(
-                              message.createdAt.formattedDate,
-                              style: theme.textTheme.labelMedium,
-                            ),
-                          ],
-                        ),
-                      ],
+                  MessageDetailHeader(message: state.message),
+                  SafeArea(
+                    bottom: true,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Text(
+                        state.message.message,
+                        style: theme.textTheme.bodyLarge,
+                      ),
                     ),
                   ),
                 ],
               ),
-              SafeArea(
-                bottom: true,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Text(
-                    message.message,
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -7,6 +7,7 @@ typedef MessagePressedCallback = void Function(
   Message message,
 );
 
+/// Widget that represents a message in the message list.
 class MessageListTile extends StatelessWidget {
   const MessageListTile(
     this.message, {

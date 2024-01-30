@@ -15,7 +15,7 @@ class WelcomeScreen extends StatelessWidget {
         body: BlocConsumer<WelcomeCubit, WelcomeState>(
           listener: (context, state) {
             if (state is WelcomeSuccess) {
-              _handleSuccess(context);
+              _navigateOnSuccess(context);
             }
           },
           builder: (context, state) {
@@ -42,7 +42,8 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  void _handleSuccess(BuildContext context) {
+  void _navigateOnSuccess(BuildContext context) {
+    // Gives a time to show the success status.
     Future.delayed(const Duration(seconds: 1), () {
       Navigator.pushReplacement(context, MessageListScreen.route());
     });

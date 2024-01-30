@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Widget to display a welcome info.
 class WelcomeInfo extends StatelessWidget {
   const WelcomeInfo({super.key});
 
