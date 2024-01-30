@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:openvibe_app/common/widgets/connection_indicator.dart';
 import 'package:openvibe_app/common/widgets/error_placeholder.dart';
 import 'package:openvibe_app/domain/models/message.dart';
 import 'package:openvibe_app/features/message_detail/message_detail_screen.dart';
@@ -43,49 +44,51 @@ class _MessageListScreenState extends State<MessageListScreen> {
       appBar: AppBar(
         title: const Text('Openvibe'),
       ),
-      body: BlocBuilder<MessageListCubit, MessageListState>(
-          builder: (context, state) {
-        if (state.messages.isEmpty) {
-          if (state.messagesRequest != null) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          return Center(
-            child: ErrorPlaceholder(
-              title: 'No messages',
-              message: 'App failed to load messages. Please, try to reload',
-              onReload: context.read<MessageListCubit>().loadMessages,
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          controller: _scrollController,
-          itemCount: state.messagesRequest != null
-              ? state.messages.length + 1
-              : state.messages.length,
-          itemBuilder: (context, index) {
-            final loaderIndex = state.messages.length;
-            if (index == loaderIndex) {
+      body: ConnectionIndicator(
+        child: BlocBuilder<MessageListCubit, MessageListState>(
+            builder: (context, state) {
+          if (state.messages.isEmpty) {
+            if (state.messagesRequest != null) {
               return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(8),
-                  child: CircularProgressIndicator(),
-                ),
+                child: CircularProgressIndicator(),
               );
             }
-
-            final message = state.messages[index];
-            return MessageListTile(
-              message,
-              showDivider: index > 0,
-              onMessagePressed: _handleMessagePressed,
+            return Center(
+              child: ErrorPlaceholder(
+                title: 'No messages',
+                message: 'App failed to load messages. Please, try to reload',
+                onReload: context.read<MessageListCubit>().loadMessages,
+              ),
             );
-          },
-        );
-      }),
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            controller: _scrollController,
+            itemCount: state.messagesRequest != null
+                ? state.messages.length + 1
+                : state.messages.length,
+            itemBuilder: (context, index) {
+              final loaderIndex = state.messages.length;
+              if (index == loaderIndex) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(8),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              final message = state.messages[index];
+              return MessageListTile(
+                message,
+                showDivider: index > 0,
+                onMessagePressed: _handleMessagePressed,
+              );
+            },
+          );
+        }),
+      ),
     );
   }
 

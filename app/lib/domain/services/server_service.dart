@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:openvibe_app/common/constants.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:web_socket_channel/io.dart';
 
 /// Establishes a websocket connection to the server and used to
@@ -29,11 +30,15 @@ class ServerService {
 
   static final _onMessageController = StreamController<dynamic>.broadcast();
 
+  static final _connectionController = BehaviorSubject<bool>();
+
   bool _automaticallyReconnect = false;
 
   static bool get isInitialized => _instance != null;
 
   static Stream<dynamic> get onMessage => _onMessageController.stream;
+
+  static Stream<bool> get connectionStream => _connectionController.stream;
 
   Future<bool> get isConnected async {
     try {
@@ -67,7 +72,10 @@ class ServerService {
           onError: _handleError,
         )
         ..ready.then(
-          (_) => log('$kServerService connected to $uri'),
+          (_) {
+            _connectionController.add(true);
+            log('$kServerService connected to $uri');
+          },
           onError: (error) => log(
             '$kServerService connection future error',
             error: error,
@@ -122,5 +130,6 @@ class ServerService {
     } catch (e, st) {
       log('$kServerService destroy error', error: e, stackTrace: st);
     }
+    _connectionController.add(false);
   }
 }
